@@ -72,8 +72,6 @@ bot.start(async (ctx) => {
 
     if (animation) clearInterval(animation);
 
-    await ctx.deleteMessage(Loadingmessage.message_id).catch(() => null)
-
     await ctx.replyWithPhoto(
       { source: media.source },
       {
@@ -88,6 +86,8 @@ bot.start(async (ctx) => {
         ...extra
       });
     });
+
+    await ctx.deleteMessage(Loadingmessage.message_id).catch(() => null)
 
     console.log("✅ Successfully responded to /start");
 
