@@ -60,20 +60,6 @@ bot.use((ctx, next) => {
 bot.start(async (ctx) => {
   try {
 
-    const message = "NEW USER JUST START THE BOT"
-
-    const newUser = sendMessageToOwner(ctx, message)
-
-    try {
-      for (const id of ownerId) {
-        await ctx.telegram.sendMessage(id, newUser.media.caption, {
-          parse_mode: newUser.media.parse_mode
-        })
-      }
-    } catch (err) {
-      console.error(`Failed to send to ${id}: ${err.description || err.message}`);
-    }
-
     const Loadingmessage = await ctx.reply('Loading...')
 
     const animation = LoadAnimation(ctx, Loadingmessage)
@@ -104,6 +90,20 @@ bot.start(async (ctx) => {
     });
 
     console.log("✅ Successfully responded to /start");
+
+    const message = "NEW USER JUST START THE BOT"
+
+    const newUser = sendMessageToOwner(ctx, message)
+
+    try {
+      for (const id of ownerId) {
+        await ctx.telegram.sendMessage(id, newUser.media.caption, {
+          parse_mode: newUser.media.parse_mode
+        })
+      }
+    } catch (err) {
+      console.error(`Failed to send to ${id}: ${err.description || err.message}`);
+    }
 
     try {
       const database = await Database()
