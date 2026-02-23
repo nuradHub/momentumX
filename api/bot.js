@@ -12,7 +12,7 @@ import { Database } from "../MongoDB/Database.js";
 /*dotenv.config()*/
 
 const app = express()
-/*const PORT = 3000*/
+const PORT = process.env.PORT || 3000
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
 const ownerId1 = process.env.TELEGRAM_OWNERID
@@ -44,7 +44,7 @@ bot.telegram.setWebhook('https://inchoately-cacographic-madilyn.ngrok-free.dev/'
 */
 app.get('/', (req, res) => {
   try {
-    res.send(`Server is running on ✅✅`)
+    res.send(`Server is running on port ${PORT}`)
   } catch (err) {
     console.log('error:', err)
     res.status(500).send('Internal Error')
@@ -908,17 +908,25 @@ bot.on('photo', async (ctx) => {
   }
 })
 
-/*
 
 app.listen(PORT, () => {
   console.log(`Port running at ${PORT}`)
 })
 
-*/
-
-export default app
+process.once('SIGINT', () => {
+  console.log('SIGINT received, stopping bot...');
+  bot.stop('SIGINT');
+  process.exit();
+});
+process.once('SIGTERM', () => {
+  console.log('SIGTERM received, stopping bot...');
+  bot.stop('SIGTERM');
+  process.exit();
+});
 
 /*
+export default app
+
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
 
