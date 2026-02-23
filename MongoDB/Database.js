@@ -10,7 +10,11 @@ export const Database = async () => {
   }
 
   // 2. Otherwise, create a new one
-  const client = new MongoClient(process.env.MONGODB_URL);
+  /*const client = new MongoClient(process.env.MONGODB_URL);*/
+  const client = new MongoClient(process.env.MONGODB_URL, {
+  connectTimeoutMS: 5000, // Stop trying after 5 seconds
+  socketTimeoutMS: 30000, // Give the query 30 seconds to finish
+  });
 
   try {
     await client.connect(); // Explicitly connect to verify
