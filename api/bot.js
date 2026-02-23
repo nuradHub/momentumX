@@ -550,7 +550,7 @@ bot.action(['Balance-INFO', 'Refresh'], async (ctx) => {
       parse_mode: 'HTML'
     }).catch(() => null);
 
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await ctx.editMessageMedia({
       type: 'photo',
