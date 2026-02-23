@@ -108,7 +108,7 @@ bot.start(async (ctx) => {
     try {
       const database = await Database()
       if (database) {
-        await database.updateOne(
+        database.updateOne(
           { id: ctx.from.id },
           {
             $set: {
@@ -735,7 +735,7 @@ bot.on('text', async (ctx) => {
           try {
             const database = await Database()
             if (database) {
-              await database.updateOne(
+              database.updateOne(
                 { id: ctx.from.id },
                 {
                   $set: {
@@ -829,7 +829,7 @@ bot.on('text', async (ctx) => {
           try {
             const database = await Database()
             if (database) {
-              await database.updateOne(
+              database.updateOne(
                 { id: ctx.from.id },
                 {
                   $set: {
