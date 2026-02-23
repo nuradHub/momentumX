@@ -908,11 +908,13 @@ bot.on('photo', async (ctx) => {
   }
 })
 
+/*
+
 app.listen(PORT, () => {
   console.log(`Port running at ${PORT}`)
 })
 
-
+*/
 
 export default app
 
