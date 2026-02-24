@@ -32,7 +32,7 @@ const store = Mongo({
 app.use(express.json())
 
 // 3. Webhook Callback
-app.use(bot.webhookCallback('/'))
+//app.use(bot.webhookCallback('/'))
 
 bot.use(session({ store: store }))
 
