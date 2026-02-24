@@ -911,6 +911,7 @@ bot.on('photo', async (ctx) => {
 
 app.listen(PORT, () => {
   console.log(`Port running at ${PORT}`)
+  bot.launch();
 })
 
 process.once('SIGINT', () => {
