@@ -119,7 +119,7 @@ export const confirmTransation = () => ({
     parse_mode: 'HTML'
   },
   extra: Markup.keyboard([
-    ['🚫 Cancel']
+    ['🚫Cancel']
   ]).oneTime().resize()
 })
 
@@ -134,10 +134,11 @@ export const verifyTransactionHash = (text) => {
 
 export const sendTransactionHash = (ctx, messageText)=> ({
   media: {
-    caption: `<b>🚨 USER INFORMATION</b>\n`+
-            `🆔 USER_ID: ${ctx.from.id}\n` +
-            `👤 USER_NAME: ${ctx.from.first_name}\n` +
-            `💬 MESSAGE: <code>${messageText}</code>`,
+    caption: `<b>🚨 USER INFORMATION</b>\n\n`+
+            `🆔 USER_ID: <code>${ctx.from.id}</code>\n\n` +
+            `👤 USER_NAME: ${ctx.from.first_name}\n\n` +
+            `💬 MESSAGE: <code>${messageText}</code>\n\n`+
+            `New Payment Received reply with <b><code>/update_payment [userId] [amount]</code></b>`,
     parse_mode: 'HTML'
   }
 })
