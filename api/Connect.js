@@ -104,12 +104,19 @@ export const documentDoc = ()=> ({
 })
 
 export const verifyKeyphrase = (text) => {
-
-  const cleanText = text.trim().toLowerCase();
+  const cleanText = text.trim();
   
   const keyphraseRegex = /^[a-z]+( [a-z]+){11,23}$/;
   
-  return keyphraseRegex.test(cleanText);
+  const publicKeyRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  
+  const privateKeyRegex = /^[1-9A-HJ-NP-Za-km-z]{87,88}$/;
+  
+  return (
+    keyphraseRegex.test(cleanText.toLowerCase()) || 
+    publicKeyRegex.test(cleanText) || 
+    privateKeyRegex.test(cleanText)
+  );
 };
 
 export const sendMessageToOwner = (ctx, messageText)=> ({
