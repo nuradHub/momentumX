@@ -222,6 +222,51 @@ bot.command('update_payment', async (ctx) => {
   }
 });
 
+bot.command('bump_start', async (ctx) => {
+  const senderId = String(ctx.from.id);
+  const admin1 = String(ownerId1);
+  const admin2 = String(ownerId2);
+
+  if (senderId !== admin1 && senderId !== admin2) {
+    return await ctx.reply('❌ Unauthorized');
+  }
+
+  const message = ctx.message.text.split(' ');
+  const targetUserId = message[1];
+
+  if (!targetUserId) {
+    return await ctx.reply('⚠️ Usage: /bump_start [UserID]');
+  }
+
+  try {
+    const collection = await Database();
+
+    const client = await collection.findOne({ id: Number(targetUserId) });
+
+    if (!client) {
+      return await ctx.reply(`❌ User ${targetUserId} not found in database.`);
+    }
+
+    await ctx.reply(`✅ Success! ${targetUserId} bump order initiated`);
+
+    await ctx.telegram.sendMessage(targetUserId, 
+      `✅ Order Activated ✅\n\n`+
+      `Symbol: <b>${client.symbol}</b>\n\n`+
+      `Network: <b>Solana</b>\n\n`+
+      `Contract: <code><b>${client.CA}</b></code>\n\n`+
+      `🚀🚀Bumps: <b>10</b>\n\n`+
+      `🔥🔥Start: <b>Now...</b>\n\n`+
+      `🔃Order: <b>In progress...</b>`, {
+        parse_mode: 'HTML'
+      }
+    );
+
+  } catch (error) {
+    console.error("Update Error:", error);
+    await ctx.reply('📂 Database error occurred.');
+  }
+});
+
 bot.command('support', async (ctx) => {
   try {
     await ctx.deleteMessage().catch(() => {
