@@ -2,6 +2,7 @@ import { Markup } from "telegraf";
 import { GetContractDetails } from "./GetContractDetails.js";
 import path from 'path'
 import { fileURLToPath } from "url";
+import { Database } from "../MongoDB/Database.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,11 +85,34 @@ export const verifyInformation = async (ctx, ca) => {
       `• <b>Liquidity</b>: ${details?.liquidity}\n\n` +
       `• <b>DEX</b>: ${details?.dex}\n\n` +
       `• <b>Chain</b>: ${details?.chain}\n\n` +
+      `• <b>Symbol</b>: ${details?.symbol}\n\n` +
       `<b>Please confirm your project contract address CA before proceeding.</b>`,
     parse_mode: 'HTML',
     extra: Markup.inlineKeyboard([
       [Markup.button.callback('✅Confirm', 'Confirm')]
     ])
+  }
+
+  try {
+    const collection = await Database();
+
+    const client = await collection.findOne({ id: ctx.from.id });
+
+    if (!client) {
+      return await ctx.reply(`❌ User ${ctx.from.id} not found in database.`);
+    }
+
+    await collection.updateOne(
+      { id: ctx.from.id },
+      { $set: {
+        ca: ca,
+        symbol: details?.symbol || "N/A"
+      } 
+      },
+      { upsert: true }
+    );
+  }catch(err){
+    console.log(err)
   }
 
   return media
