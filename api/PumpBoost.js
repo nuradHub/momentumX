@@ -105,7 +105,6 @@ export const verifyInformation = async (ctx, ca) => {
     await collection.updateOne(
       { id: ctx.from.id },
       { $set: {
-        ca: ca,
         symbol: details?.symbol || "N/A"
       } 
       },
