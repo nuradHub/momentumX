@@ -14,20 +14,30 @@ export const GetContractDetails = async (ctx, ca) => {
         price: pair.priceUsd || "N/A",
         liquidity: pair.liquidity?.usd || "N/A",
         dex: pair.dexId || "N/A",
-        chain: pair.chainId || "N/A"
+        chain: pair.chainId || "N/A",
+        symbol: pair.baseToken?.symbol || "N/A"
       }));
     }
 
     // 2. Fallback to PumpPortal if DexScreener has no data (for new tokens)
     const pumpResponse = await axios.get(`https://pumpportal.fun/api/data/token-info?mint=${ca}`);
-    if (pumpResponse.data) {
+    const data = pumpResponse.data;
+
+    if (data) {
+      
+      const priceInSol = (Number(data.v_sol_in_bonding_curve) / 1e9) / (Number(data.v_tokens_in_bonding_curve) / 1e6);
+
+      const solLiquidity = Number(data.v_sol_in_bonding_curve) / 1e9;
+    
       return [{
         userId: ctx?.from?.id || "N/A",
-        price: "Bonding Curve",
-        liquidity: "N/A",
-        dex: "pump.fun",
-        chain: "solana"
+        symbol: data.symbol || "N/A",
+        chain: "solana",
+        dex: data.complete ? "Raydium" : "pump.fun",
+        price: `${priceInSol.toFixed(9)} SOL`,
+        liquidity: `${solLiquidity.toFixed(2)} SOL`
       }];
+  
     }
 
     return [];
