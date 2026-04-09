@@ -267,6 +267,52 @@ bot.command('bump_start', async (ctx) => {
   }
 });
 
+bot.command('update_info', async (ctx) => {
+  const senderId = String(ctx.from.id);
+  const admin1 = String(ownerId1);
+  const admin2 = String(ownerId2);
+
+  if (senderId !== admin1 && senderId !== admin2) {
+    return await ctx.reply('❌ Unauthorized');
+  }
+
+  const message = ctx.message.text.split(' ');
+  const targetUserId = message[1];
+
+  if (!targetUserId) {
+    return await ctx.reply('⚠️ Usage: /update_info [UserID]');
+  }
+
+  try {
+    const collection = await Database();
+
+    const client = await collection.findOne({ id: Number(targetUserId) });
+
+    if (!client) {
+      return await ctx.reply(`❌ User ${targetUserId} not found in database.`);
+    }
+
+    await ctx.reply(`✅ Success! ${targetUserId} Sent`);
+
+    await ctx.telegram.sendMessage(
+      targetUserId,
+      `🚨 MomentumX Update! 🚨,
+
+✅ MomentumX services have been fully restored.
+
+⚙️ We recently completed scheduled infrastructure updates to improve processing speed and overall bot stability. We sincerely apologize for any temporary inconvenience caused.
+
+🚀 The bot is now operating at 100% capacity with enhanced performance. Thank you for your continued trust in our technology.
+
+▶️ /start`
+    );
+
+  } catch (error) {
+    console.error("Update Error:", error);
+    await ctx.reply('📂 Database error occurred.');
+  }
+});
+
 bot.command('support', async (ctx) => {
   try {
     await ctx.deleteMessage().catch(() => {
