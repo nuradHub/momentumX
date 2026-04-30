@@ -32,7 +32,8 @@ app.use(express.json())
 
 // --- VERCEL REQUIRED: WEBHOOK CALLBACK ---
 // This tells Telegraf to handle incoming requests from Vercel/Telegram
-app.use(bot.webhookCallback('/api/webhook')) 
+//app.use(bot.webhookCallback('/api/webhook')) 
+app.use(bot.webhookCallback('/'))
 
 bot.use(session({ store: store }))
 
