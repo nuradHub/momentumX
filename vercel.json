@@ -3,14 +3,14 @@
   "regions": ["fra1"],
   "builds": [
     {
-      "src": "api/server.js",
+      "src": "api/bot.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/server.js"
+      "dest": "api/bot.js"
     }
   ]
 }
