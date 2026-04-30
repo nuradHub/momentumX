@@ -12,7 +12,8 @@ import { Database } from "../MongoDB/Database.js";
 dotenv.config()
 
 const app = express()
-const PORT = process.env.PORT || 3000;
+// MANGOI TIP: Using 80 or 8080 is standard for most persistent hosts
+const PORT = process.env.PORT || 80; 
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
 const ownerId1 = process.env.TELEGRAM_OWNERID
@@ -30,10 +31,8 @@ const store = Mongo({
 
 app.use(express.json())
 
-// --- VERCEL REQUIRED: WEBHOOK CALLBACK ---
-// This tells Telegraf to handle incoming requests from Vercel/Telegram
-//app.use(bot.webhookCallback('/api/webhook')) 
-app.use(bot.webhookCallback('/'))
+// --- WEBHOOK (COMMENTED OUT FOR MANGOI/POLLING) ---
+// app.use(bot.webhookCallback('/'))
 
 bot.use(session({ store: store }))
 
@@ -1201,23 +1200,24 @@ bot.on('photo', async (ctx) => {
   }
 })
 
-// --- VERCEL CHANGE: COMMENTED OUT APP.LISTEN & BOT.LAUNCH ---
-/*
+// --- MANGOI/PERSISTENT HOST SETUP ---
+// We enable app.listen so the URL doesn't 404, and bot.launch for instant polling
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server is live on port ${PORT}`);
   
-  // Start the bot using Long Polling for fps.ms
+  // Start the bot using Long Polling (Instant response, no lag)
   bot.launch()
-  .then(() => console.log("🚀 MomentumX Bot is successfully connected!"))
+  .then(() => console.log("🚀 MomentumX Bot is successfully connected via Polling!"))
   .catch((err) => console.error("❌ Bot Launch Error:", err));
 });
-*/
 
-// --- VERCEL REQUIRED: EXPORT THE APP ---
-// Vercel needs to export the express app to handle the serverless request
+app.get('/', (req, res) => {
+  res.send('MomentumX Bot Server is Online');
+});
+
+// --- EXPORT REMAINING FOR COMPATIBILITY ---
 export default app;
 
-/*
 process.once('SIGINT', () => {
   console.log('SIGINT received, stopping bot...');
   bot.stop('SIGINT');
@@ -1228,4 +1228,3 @@ process.once('SIGTERM', () => {
   bot.stop('SIGTERM');
   process.exit();
 });
-*/
