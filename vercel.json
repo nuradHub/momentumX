@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/bot.js" }
+  "regions": ["fra1"],
+  "rewrites": [
+    { "source": "/api/webhook", "destination": "/" }
   ]
 }
