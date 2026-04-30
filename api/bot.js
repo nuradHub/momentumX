@@ -41,7 +41,7 @@ bot.telegram.setWebhook('https://inchoately-cacographic-madilyn.ngrok-free.dev/'
   drop_pending_updates: true
 }).then(() => console.log("✅ Webhook Set Successfully"));
 */
-
+/*
 app.get('/', (req, res) => {
   try {
     res.send(`Server is running on port ${PORT}`)
@@ -50,6 +50,11 @@ app.get('/', (req, res) => {
     res.status(500).send('Internal Error')
   }
 })
+*/
+
+app.get('/', (req, res) => {
+  res.send('<h1>MomentumX Bot is Online</h1><p>Status: Running on Mangoi.in</p>');
+});
 
 // 1. Logs EVERY incoming request from Telegram
 bot.use((ctx, next) => {
