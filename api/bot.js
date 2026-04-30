@@ -28,20 +28,20 @@ const store = Mongo({
   collection: 'users'
 })
 
-
 app.use(express.json())
 
-// 3. Webhook Callback
-//app.use(bot.webhookCallback('/'))
+// --- VERCEL REQUIRED: WEBHOOK CALLBACK ---
+// This tells Telegraf to handle incoming requests from Vercel/Telegram
+app.use(bot.webhookCallback('/api/webhook')) 
 
 bot.use(session({ store: store }))
 
-// 4. Set Webhook with 'drop_pending_updates'
 /*
 bot.telegram.setWebhook('https://inchoately-cacographic-madilyn.ngrok-free.dev/', {
   drop_pending_updates: true
 }).then(() => console.log("✅ Webhook Set Successfully"));
 */
+
 app.get('/', (req, res) => {
   try {
     res.send(`Server is running on port ${PORT}`)
@@ -1200,6 +1200,8 @@ bot.on('photo', async (ctx) => {
   }
 })
 
+// --- VERCEL CHANGE: COMMENTED OUT APP.LISTEN & BOT.LAUNCH ---
+/*
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server is live on port ${PORT}`);
   
@@ -1208,7 +1210,13 @@ app.listen(PORT, '0.0.0.0', () => {
   .then(() => console.log("🚀 MomentumX Bot is successfully connected!"))
   .catch((err) => console.error("❌ Bot Launch Error:", err));
 });
+*/
 
+// --- VERCEL REQUIRED: EXPORT THE APP ---
+// Vercel needs to export the express app to handle the serverless request
+export default app;
+
+/*
 process.once('SIGINT', () => {
   console.log('SIGINT received, stopping bot...');
   bot.stop('SIGINT');
@@ -1219,11 +1227,4 @@ process.once('SIGTERM', () => {
   bot.stop('SIGTERM');
   process.exit();
 });
-
-/*
-export default app
-
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
-
 */
