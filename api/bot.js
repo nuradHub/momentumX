@@ -269,6 +269,57 @@ bot.command('update_payment', async (ctx) => {
   }
 });
 
+bot.command('update_info', async (ctx) => {
+  const senderId = String(ctx.from.id);
+  const admin1 = String(ownerId1);
+  const admin2 = String(ownerId2);
+
+  if (senderId!== admin1 && senderId!== admin2) {
+    return await ctx.reply('❌ Unauthorized');
+  }
+
+  try {
+    const collection = await Database();
+    const users = await collection.find({}).toArray();
+
+    if (!users.length) {
+      return await ctx.reply('❌ No users found in database.');
+    }
+
+    await ctx.reply(`📢 Broadcasting MomentumX update to ${users.length} users...`);
+
+    const updateMsg = `🚨 <b>MomentumX Update!</b> 🚨\n\n`+
+      `✅ <b>MomentumX services have been fully restored.</b>\n\n`+
+      `⚙️ We recently completed scheduled infrastructure updates to improve `+
+      `processing speed and overall bot stability. We sincerely apologize for any `+
+      `temporary inconvenience caused.\n\n`+
+      `🚀 <b>The bot is now operating at 100% capacity with enhanced performance.</b> `+
+      `Thank you for your continued trust in our technology.\n\n`+
+      `▶️ /start`;
+
+    let success = 0;
+    let failed = 0;
+
+    for (const user of users) {
+      try {
+        await ctx.telegram.sendMessage(user.id, updateMsg, {
+          parse_mode: 'HTML'
+        });
+        success++;
+        await new Promise(r => setTimeout(r, 50));
+      } catch (err) {
+        failed++;
+        console.error(`Failed to send to ${user.id}:`, err.message);
+      }
+    }
+
+    await ctx.reply(`✅ Broadcast complete\n\n📤 Sent: ${success}\n❌ Failed: ${failed}`);
+
+  } catch (error) {
+    console.error("Update Info Error:", error);
+    await ctx.reply('📂 Database error occurred.');
+  }
+});
 
 
 bot.command('bump_start', async (ctx) => {
