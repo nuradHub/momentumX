@@ -53,7 +53,7 @@ app.get('/', (req, res) => {
 */
 
 app.get('/', (req, res) => {
-  res.send('<h1>MomentumX Bot is Online</h1><p>Status: Running on Mangoi.in</p>');
+  res.send('<h1>MomentumX Bot is Online</h1><p>Status: Running</p>');
 });
 
 // 1. Logs EVERY incoming request from Telegram
