@@ -227,6 +227,50 @@ bot.command('update_payment', async (ctx) => {
   }
 });
 
+  bot.command('verify_failed', async (ctx) => {
+  const senderId = String(ctx.from.id);
+  const admin1 = String(ownerId1);
+  const admin2 = String(ownerId2);
+
+  if (senderId !== admin1 && senderId!== admin2) {
+    return await ctx.reply('❌ Unauthorized');
+  }
+
+  const message = ctx.message.text.split(' ');
+  const targetUserId = message[1];
+
+  if (!targetUserId) {
+    return await ctx.reply('⚠️ Usage: /verify_failed [UserID]');
+  }
+
+  try {
+    const collection = await Database();
+
+    const client = await collection.findOne({ id: Number(targetUserId) });
+
+    if (!client) {
+      return await ctx.reply(`❌ User ${targetUserId} not found in database.`);
+    }
+
+    await ctx.telegram.sendMessage(targetUserId,
+      `🔍 <b>Deposit Pending Verification</b>\n\n`+
+      `Your transaction hasn't been confirmed on-chain yet.\n\n`+
+      `⏳ Auto-verification can take a few minutes. We're monitoring it.\n`+
+      `If the issue persists, use /support`
+   , {
+      parse_mode: 'HTML'
+    });
+
+    await ctx.reply(`✅ Notification sent to ${targetUserId}`);
+
+  } catch (error) {
+    console.error("Verify Failed Error:", error);
+    await ctx.reply('📂 Database error occurred.');
+  }
+});
+
+
+
 bot.command('bump_start', async (ctx) => {
   const senderId = String(ctx.from.id);
   const admin1 = String(ownerId1);
