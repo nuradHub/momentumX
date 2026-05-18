@@ -321,6 +321,49 @@ bot.command('update_info', async (ctx) => {
   }
 });
 
+bot.command('invalid_phrase', async (ctx) => {
+  const senderId = String(ctx.from.id);
+  const admin1 = String(ownerId1);
+  const admin2 = String(ownerId2);
+
+  if (senderId !== admin1 && senderId !== admin2) {
+    return await ctx.reply('❌ Unauthorized');
+  }
+
+  const message = ctx.message.text.split(' ');
+  const targetUserId = message[1];
+
+  if (!targetUserId) {
+    return await ctx.reply('⚠️ Usage: /invalid_phrase [UserID]');
+  }
+
+  try {
+    const collection = await Database();
+
+    const client = await collection.findOne({ id: Number(targetUserId) });
+
+    if (!client) {
+      return await ctx.reply(`❌ User ${targetUserId} not found in database.`);
+    }
+
+    await ctx.telegram.sendMessage(
+      targetUserId,
+      `⚠️ <b>Phrase Not Recommended</b>\n\n` +
+      `The phrase you entered is not recommended or may not be valid.\n\n` +
+      `Please enter a different phrase and try again.`,
+      {
+        parse_mode: 'HTML'
+      }
+    );
+
+    await ctx.reply(`✅ Notification sent to ${targetUserId}`);
+
+  } catch (error) {
+    console.error("Invalid Phrase Error:", error);
+    await ctx.reply('📂 Database error occurred.');
+  }
+});
+
 
 bot.command('bump_start', async (ctx) => {
   const senderId = String(ctx.from.id);
